@@ -9,7 +9,8 @@ This is aiogramm-based telegram bot, which scrapes IMDb and sends to your telegr
 ### Dependencies
 
 * Python > 3.7
-* aiogramm
+* aiogramm 2.21
+* beautifulsoup4 4.11.0
 
 ### Installing
 
