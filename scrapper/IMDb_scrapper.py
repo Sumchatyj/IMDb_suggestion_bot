@@ -12,11 +12,44 @@ HEADERS = {
 }
 
 CATEGORIES = {
-    "random_Top_250_Movies": "https://www.imdb.com/chart/top/",
+    "Top_250_Movie": "https://www.imdb.com/chart/top/",
 }
 
 IMDB_URL = "https://www.imdb.com"
 
+GENRES = [
+    'Action', 'Adventure', 'Animation', 'Biography', 'Comedy', 'Crime',
+    'Drama', 'Family', 'Fantasy', 'Film-Noir', 'History', 'Horror', 'Music',
+    'Musical', 'Mystery', 'Romance', 'Sci-Fi', 'Sport', 'Thriller',
+    'War', 'Western'
+]
+
+GENRES_MOVIE = {
+    'Top_250_Movie': '',
+    'Action_Movie': 'Action',
+    'Adventure_Movie': 'Adventure',
+    'Animation_Movie': 'Animation',
+    'Biography_Movie': 'Biography',
+    'Comedy_Movie': 'Comedy',
+    'Crime_Movie': 'Crime',
+    'Drama_Movie': 'Drama',
+    'Family_Movie': 'Family',
+    'Fantasy_Movie': 'Fantasy',
+    'Film-Noir_Movie': 'Film-Noir',
+    'History_Movie': 'History',
+    'Horror_Movie': 'Horror',
+    'Music_Movie': 'Music',
+    'Musical_Movie': 'Musical',
+    'Mystery_Movie': 'Mystery',
+    'Romance_Movie': 'Romance',
+    'Sci-Fi_Movie': 'Sci-Fi',
+    'Sport_Movie': 'Sport',
+    'Thriller_Movie': 'Thriller',
+    'War_Movie': 'War',
+    'Western_Movie': 'Western',
+}
+
+GENRES_MOVIE_LIST = list(GENRES_MOVIE.keys())
 
 class Client:
     def __init__(self) -> None:
@@ -40,16 +73,27 @@ class Title_Single:
         self.tags = []
 
     async def get_url(self) -> None:
-        url = CATEGORIES.get(self.category)
-        if url is None:
-            raise Exception("wrong category")
-        if self.category == "random_Top_250_Movies":
+        if self.category == "Top_250_Movie":
+            url = "https://www.imdb.com/chart/top/"
             response = await self.client.session.get(url)
             soup = BeautifulSoup(await response.text(), "lxml")
             position = random.randint(0, 249)
             end_url = soup.tbody.find_all(class_="titleColumn")[
                 position
             ].a.get("href")
+            self.url = IMDB_URL + end_url
+        elif self.category in GENRES_MOVIE:
+            position = random.randint(1, 250)
+            url = (
+                f"https://www.imdb.com/search/title/?title_type=feature&"
+                f"num_votes=25000,&genres={GENRES_MOVIE[self.category]}&"
+                f"sort=user_rating,desc&start={position}"
+            )
+            response = await self.client.session.get(url)
+            soup = BeautifulSoup(await response.text(), "lxml")
+            end_url = soup.find(
+                class_="lister-item mode-advanced"
+            ).a.get('href')
             self.url = IMDB_URL + end_url
 
     async def get_from_graphql(self, title_id: str) -> None:
@@ -125,7 +169,7 @@ class Title_Single:
 
 
 def get_genres() -> set:
-    url = CATEGORIES.get("random_Top_250_Movies")
+    url = CATEGORIES.get("Top_250_Movie")
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "lxml")
     result = []
@@ -137,13 +181,12 @@ def get_genres() -> set:
 
 async def main():
     client = Client()
-    title = Title_Single(client, "random_Top_250_Movies")
+    title = Title_Single(client, "Musical_Movie")
     await title.get_url()
-    print(get_genres())
-    await title.get_data()
+    # print(get_genres())
+    # await title.get_data()
     await title.session_close()
-    print(title.storyline)
-
+    print(list(GENRES_MOVIE.keys()))
 
 if __name__ == "__main__":
     asyncio.run(main())
