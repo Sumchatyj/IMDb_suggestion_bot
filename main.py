@@ -1,11 +1,11 @@
 from aiogram.utils import executor
-from bot import dispatcher
+from bot import dispatcher, handlers
 
 
 from scrapper.IMDb_scrapper import get_genres
 
 
-GENRES = set()
+GENRES = []
 
 
 async def on_startup(_):
