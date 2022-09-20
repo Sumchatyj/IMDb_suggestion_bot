@@ -2,7 +2,7 @@
 
 ## Description
 
-This is aiogramm-based telegram bot, which scrapes IMDb and sends to your telegram necessary information about one movie from IMDb Top 250 Movies or IMDb Top 250 Movies by genre (in progress). So you can make a decision what movie to see tonight.
+This is aiogramm-based telegram bot, which scrapes IMDb and sends to your telegram necessary information about one movie from IMDb Top 250 Movies or IMDb Top 250 Movies by genre. So you can make a decision what movie to see tonight.
 
 ## Getting started
 

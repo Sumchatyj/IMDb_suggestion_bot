@@ -6,6 +6,7 @@ import asyncio
 import aiohttp
 import ssl
 import certifi
+from .exceptions import RequestException
 
 HEADERS = {
     "Accept-Language": "en-US,en;q=0.5",
@@ -51,7 +52,9 @@ GENRES_MOVIE = {
 
 GENRES_MOVIE_LIST = list(GENRES_MOVIE.keys())
 
+
 class Client:
+    """ClientSession class for requests."""
     def __init__(self) -> None:
         ssl_context = ssl.create_default_context(cafile=certifi.where())
         conn = aiohttp.TCPConnector(ssl=ssl_context)
@@ -59,6 +62,7 @@ class Client:
 
 
 class Title_Single:
+    """Class for single title in all genres."""
     def __init__(self, client: Client, category: str) -> None:
         self.client = client
         self.category = category
@@ -76,6 +80,9 @@ class Title_Single:
         if self.category == "Top_250_Movie":
             url = "https://www.imdb.com/chart/top/"
             response = await self.client.session.get(url)
+            if response.status != 200:
+                self.session_close()
+                raise RequestException(f"request code: {response.status}")
             soup = BeautifulSoup(await response.text(), "lxml")
             position = random.randint(0, 249)
             end_url = soup.tbody.find_all(class_="titleColumn")[
@@ -90,6 +97,9 @@ class Title_Single:
                 f"sort=user_rating,desc&start={position}"
             )
             response = await self.client.session.get(url)
+            if response.status != 200:
+                self.session_close()
+                raise RequestException(f"request code: {response.status}")
             soup = BeautifulSoup(await response.text(), "lxml")
             end_url = soup.find(
                 class_="lister-item mode-advanced"
@@ -107,6 +117,9 @@ class Title_Single:
         response = await self.client.session.get(
             url, headers={"content-type": "application/json"}
         )
+        if response.status != 200:
+            self.session_close()
+            raise RequestException(f"request code: {response.status}")
         response_data = await response.json()
         self.storyline = (
             response_data.get("data")
@@ -140,6 +153,9 @@ class Title_Single:
         title_id = re.split(r"/", self.url)[-2]
         await self.get_from_graphql(title_id)
         response = await self.client.session.get(self.url)
+        if response.status != 200:
+            self.session_close()
+            raise RequestException(f"request code: {response.status}")
         soup = BeautifulSoup(await response.text(), "lxml")
         poster = soup.find(
             "div",

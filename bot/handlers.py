@@ -1,5 +1,6 @@
 from aiogram import types
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+import asyncio
 
 from .dispatcher import dp
 from .keyboards import (
@@ -8,6 +9,7 @@ from .keyboards import (
     MOVIE_GENRES_P1,
     MOVIE_GENRES_P2
 )
+from .exceptions import FirstRequestException, SecondRequestException
 from scrapper.IMDb_scrapper import Title_Single, Client, GENRES_MOVIE_LIST
 
 
@@ -54,11 +56,30 @@ async def Movie_Genres_p2_handler(event: types.Message):
         reply_markup=MOVIE_GENRES_P2
     )
 
+
 @dp.message_handler(commands=GENRES_MOVIE_LIST)
 async def get_single_title_handler(message: types.Message):
+    """Hadler that does request to IMDb and collect result into message."""
+    markup = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=f'{message.text}'),
+                KeyboardButton(text='/menu'),
+            ]
+        ],
+        resize_keyboard=True,
+    )
     client = Client()
     title = Title_Single(client, message.text[1:])
-    await title.get_data()
+    try:
+        await title.get_data()
+    except FirstRequestException:
+        await asyncio.sleep(1)
+        try:
+            await title.get_data()
+        except SecondRequestException:
+            await title.session_close()
+            await message.answer("request failed, please try again later")
     await title.session_close()
     text = (
         f'<i>Title</i> 🎥: <b>{title.title}</b>\n'
@@ -74,15 +95,6 @@ async def get_single_title_handler(message: types.Message):
         if text[-1] in [',', '.']:
             text = text[:1076]
         text = text + "..."
-    markup = ReplyKeyboardMarkup(
-        keyboard=[
-            [
-                KeyboardButton(text=f'{message.text}'),
-                KeyboardButton(text='/menu'),
-            ]
-        ],
-        resize_keyboard=True,
-    )
     await message.answer_photo(
         photo=title.poster,
         caption=text,
