@@ -34,6 +34,14 @@ Create in root directory .env file and fill it with telegram bot token like this
 TOKEN=<your token>
 ```
 
+Or you can build Docker image and start bot in container:
+
+```
+docker run .
+```
+
 ### Commands
 
-- /random_Top_250_Movies
+- /Top_250_Movie
+- /movie_genres
+- /{genre}_Movie
