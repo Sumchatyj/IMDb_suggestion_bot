@@ -108,10 +108,10 @@ class Title_Single:
 
     async def get_from_graphql(self, title_id: str) -> None:
         url = (
-            f"https://caching.graphql.imdb.com/?operationName=TMD_Storyline&"
-            f"variables=%7B%22titleId%22%3A%22{title_id}%22%7D&extensions="
-            f"%7B%22persistedQuery%22%3A%7B%22sha256Hash%22%3A%22cbefc9c4a2dbd"
-            f"0a5583e223e5bc788946016db709a731c85251fc1b1b7a1afbe%22%2C%22"
+            f"https://caching.graphql.imdb.com/?operationName=TMD_Storyline"
+            f"&variables=%7B%22titleId%22%3A%22{title_id}%22%7D&extensions="
+            f"%7B%22persistedQuery%22%3A%7B%22sha256Hash%22%3A%2287f41463a48a"
+            f"f95ebba3129889d17181402622bfd30c8dc9216d99ac984f0091%22%2C%22"
             f"version%22%3A1%7D%7D"
         )
         response = await self.client.session.get(
