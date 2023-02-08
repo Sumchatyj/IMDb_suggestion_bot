@@ -1,19 +1,21 @@
-import requests
-from bs4 import BeautifulSoup
+import asyncio
 import random
 import re
-import asyncio
-import aiohttp
 import ssl
+
+import aiohttp
 import certifi
+import requests
+from bs4 import BeautifulSoup
+
 from .exceptions import RequestException
 
 
 HEADERS = {
     "Accept-Language": "en-US,en;q=0.5",
-    "User-Agent": f"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
-                  f" AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0"
-                  f" Safari/537.36"
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+                  " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0"
+                  " Safari/537.36"
 }
 
 CATEGORIES = {
@@ -89,7 +91,7 @@ class Title_Single:
                 raise RequestException(
                     f"request code in _get_url: {response.status}"
                     f"URL: {url}"
-            )
+                )
             soup = BeautifulSoup(await response.text(), "lxml")
             position = random.randint(0, 249)
             end_url = soup.tbody.find_all(class_="titleColumn")[
