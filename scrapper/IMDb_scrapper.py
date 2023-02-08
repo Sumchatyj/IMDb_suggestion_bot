@@ -8,8 +8,12 @@ import ssl
 import certifi
 from .exceptions import RequestException
 
+
 HEADERS = {
     "Accept-Language": "en-US,en;q=0.5",
+    "User-Agent": f"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+                  f" AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0"
+                  f" Safari/537.36"
 }
 
 CATEGORIES = {
@@ -76,13 +80,16 @@ class Title_Single:
         self.storyline = ""
         self.tags = []
 
-    async def get_url(self) -> None:
+    async def _get_url(self) -> None:
         if self.category == "Top_250_Movie":
             url = "https://www.imdb.com/chart/top/"
             response = await self.client.session.get(url)
             if response.status != 200:
                 self.session_close()
-                raise RequestException(f"request code: {response.status}")
+                raise RequestException(
+                    f"request code in _get_url: {response.status}"
+                    f"URL: {url}"
+            )
             soup = BeautifulSoup(await response.text(), "lxml")
             position = random.randint(0, 249)
             end_url = soup.tbody.find_all(class_="titleColumn")[
@@ -93,7 +100,7 @@ class Title_Single:
             position = random.randint(1, 250)
             url = (
                 f"https://www.imdb.com/search/title/?title_type=feature&"
-                f"num_votes=25000,&genres={GENRES_MOVIE[self.category]}&"
+                f"num_votes=10000,&genres={GENRES_MOVIE[self.category]}&"
                 f"sort=user_rating,desc&start={position}"
             )
             response = await self.client.session.get(url)
@@ -106,7 +113,7 @@ class Title_Single:
             ).a.get('href')
             self.url = IMDB_URL + end_url
 
-    async def get_from_graphql(self, title_id: str) -> None:
+    async def _get_from_graphql(self, title_id: str) -> None:
         url = (
             f"https://caching.graphql.imdb.com/?operationName=TMD_Storyline"
             f"&variables=%7B%22titleId%22%3A%22{title_id}%22%7D&extensions="
@@ -119,7 +126,10 @@ class Title_Single:
         )
         if response.status != 200:
             self.session_close()
-            raise RequestException(f"request code: {response.status}")
+            raise RequestException(
+                f"request code in _get_from_graphql: {response.status}"
+                f"URL: {url}"
+            )
         response_data = await response.json()
         self.storyline = (
             response_data.get("data")
@@ -149,13 +159,16 @@ class Title_Single:
             self.genres.append(genre.get("text"))
 
     async def get_data(self) -> None:
-        await self.get_url()
+        await self._get_url()
         title_id = re.split(r"/", self.url)[-2]
-        await self.get_from_graphql(title_id)
+        await self._get_from_graphql(title_id)
         response = await self.client.session.get(self.url)
         if response.status != 200:
             self.session_close()
-            raise RequestException(f"request code: {response.status}")
+            raise RequestException(
+                f"request code in get_data: {response.status}"
+                f"URL: {self.url}"
+            )
         soup = BeautifulSoup(await response.text(), "lxml")
         poster = soup.find(
             "div",
@@ -167,14 +180,14 @@ class Title_Single:
         ).img.get("srcset")
         poster = poster.split(" ")
         self.poster = poster[-2]
-        self.title = soup.find("div", class_="sc-80d4314-1 fbQftq").h1.text
-        self.date = soup.find("span", class_="sc-8c396aa2-2 itZqyK").text
+        self.title = soup.find("div", class_="sc-b5e8e7ce-1 kNhUtn").h1.text
+        self.date = soup.find("span", class_="sc-8c396aa2-2 jwaBvf").text
         self.duration = (
-            soup.find("span", class_="sc-8c396aa2-2 itZqyK")
+            soup.find("span", class_="sc-8c396aa2-2 jwaBvf")
             .parent.find_next_siblings()[-1]
             .text
         )
-        self.rating = soup.find("span", class_="sc-7ab21ed2-1 jGRxWM").text
+        self.rating = soup.find("span", class_="sc-7ab21ed2-1 eUYAaq").text
 
     def storyline_format(self) -> None:
         self.storyline = re.sub(r'&quot;', '"', self.storyline)
@@ -198,11 +211,12 @@ def get_genres() -> set:
 async def main():
     client = Client()
     title = Title_Single(client, "Musical_Movie")
-    await title.get_url()
-    # print(get_genres())
-    # await title.get_data()
+    # await title._get_url()
+    # print(title.url)
+    await title.get_data()
+    # print(title.title)
     await title.session_close()
-    print(list(GENRES_MOVIE.keys()))
+    # print(list(GENRES_MOVIE.keys()))
 
 if __name__ == "__main__":
     asyncio.run(main())
